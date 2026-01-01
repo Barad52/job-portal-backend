@@ -18,7 +18,17 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["admin", "user"],
     default: "user"
+  },
+  skills: {
+    type: [String],
+    default: []
+  },
+  experience: {
+    type: String,
+    default: ""
   }
-});
+},
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("User", userSchema);

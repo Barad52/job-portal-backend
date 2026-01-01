@@ -5,7 +5,17 @@ const jobSchema = new mongoose.Schema(
     title: String,
     company: String,
     location: String,
-    salary: Number
+    salary: Number,
+    requiredSkills: {
+      type: [String],
+      default: []
+    }, 
+
+    status: {
+      type: String,
+      enum: ["open", "closed"],
+      default: "open"
+    }
   },
   { timestamps: true }
 );
