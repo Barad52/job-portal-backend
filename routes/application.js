@@ -25,6 +25,15 @@ router.post("/apply", auth, roleCheck("worker"), async (req, res) => {
       return res.status(400).json({ message: "Job is closed" });
     }
 
+    // 🔥 PROFILE COMPLETION CHECK (IMPORTANT)
+    const worker = await User.findById(req.user.id);
+
+    if (!worker.skills.length || !worker.experience) {
+      return res.status(400).json({
+        message: "Please complete your profile before applying"
+      });
+    }
+
     // ❌ PREVENT DUPLICATE APPLY
     const alreadyApplied = await Application.findOne({
       job: jobId,
@@ -41,15 +50,16 @@ router.post("/apply", auth, roleCheck("worker"), async (req, res) => {
     });
 
     // 📩 EMAIL TO WORKER (APPLICATION CONFIRMATION)
-    const worker = await User.findById(req.user.id);
-
     await sendEmail(
       worker.email,
       "Job Application Submitted",
       `You have successfully applied for the position of ${job.title} at ${job.company}.`
     );
 
-    res.json({ message: "Applied successfully", application });
+    res.json({
+      message: "Applied successfully",
+      application
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Apply failed" });

@@ -12,9 +12,15 @@ const applicationSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
+    employer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
     status: {
       type: String,
-      default: "applied" // applied | shortlisted | rejected
+      enum: ["applied", "shortlisted", "rejected"],
+      default: "applied"
     }
   },
   { timestamps: true }
