@@ -21,7 +21,6 @@ router.post(
       .withMessage("Password must be at least 6 characters")
   ],
   async (req, res) => {
-    // 🔎 validation check
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -40,7 +39,8 @@ router.post(
       await User.create({
         name,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        role: "worker"   // 🔥 IMPORTANT FIX
       });
 
       res.json({ message: "User registered successfully" });
@@ -61,7 +61,6 @@ router.post(
     body("password").notEmpty().withMessage("Password required")
   ],
   async (req, res) => {
-    // 🔎 validation check
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: "Invalid credentials format" });
@@ -96,7 +95,7 @@ router.post(
           id: user._id,
           name: user.name,
           email: user.email,
-          role: user.role
+          role: user.role   // 🔥 frontend needs this
         }
       });
     } catch (err) {
