@@ -6,16 +6,16 @@ const mongoose = require("mongoose");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 
-// models
-const Job = require("./models/job");
-
-// routes
+// Routes
 const authRoutes = require("./routes/auth");
 const applicationRoutes = require("./routes/application");
 const userRoutes = require("./routes/user");
 const dashboardRoutes = require("./routes/dashboard");
 
-// middleware
+// Models
+const Job = require("./models/job");
+
+// Middleware
 const auth = require("./middleware/auth");
 const roleCheck = require("./middleware/role");
 
@@ -23,28 +23,23 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ======================
-// SECURITY MIDDLEWARE
+// SECURITY
 // ======================
-
-// Helmet → security headers
 app.use(helmet());
 
-// Rate Limiter → anti spam / brute force
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
-  message: "Too many requests, please try again later."
-});
-app.use(limiter);
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100
+  })
+);
 
-// Basic middleware
 app.use(cors());
 app.use(express.json());
 
 // ======================
 // ROUTES
 // ======================
-
 app.use("/auth", authRoutes);
 app.use("/applications", applicationRoutes);
 app.use("/users", userRoutes);
@@ -54,7 +49,7 @@ app.use("/dashboard", dashboardRoutes);
 // JOB ROUTES
 // ======================
 
-// GET JOBS (PUBLIC) + FILTER + PAGINATION
+// GET JOBS (PUBLIC + FILTER + PAGINATION)
 app.get("/jobs", async (req, res) => {
   try {
     const { location, skill, page = 1 } = req.query;
@@ -93,14 +88,18 @@ app.get("/jobs", async (req, res) => {
 // ADD JOB (ADMIN)
 app.post("/jobs", auth, roleCheck("admin"), async (req, res) => {
   try {
-    const job = await Job.create(req.body);
+    const job = await Job.create({
+      ...req.body,
+      createdBy: req.user.id
+    });
+
     res.json(job);
   } catch (err) {
     res.status(400).json({ message: "Error adding job" });
   }
 });
 
-// UPDATE JOB (ADMIN)
+// UPDATE JOB
 app.put("/jobs/:id", auth, roleCheck("admin"), async (req, res) => {
   try {
     const job = await Job.findByIdAndUpdate(
@@ -114,18 +113,12 @@ app.put("/jobs/:id", auth, roleCheck("admin"), async (req, res) => {
   }
 });
 
-// UPDATE JOB STATUS (ADMIN)
+// UPDATE JOB STATUS
 app.patch("/jobs/:id/status", auth, roleCheck("admin"), async (req, res) => {
   try {
-    const { status } = req.body;
-
-    if (!["open", "closed"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
-    }
-
     const job = await Job.findByIdAndUpdate(
       req.params.id,
-      { status },
+      { status: req.body.status },
       { new: true }
     );
 
@@ -135,7 +128,7 @@ app.patch("/jobs/:id/status", auth, roleCheck("admin"), async (req, res) => {
   }
 });
 
-// DELETE JOB (ADMIN)
+// DELETE JOB
 app.delete("/jobs/:id", auth, roleCheck("admin"), async (req, res) => {
   try {
     await Job.findByIdAndDelete(req.params.id);
@@ -146,13 +139,12 @@ app.delete("/jobs/:id", auth, roleCheck("admin"), async (req, res) => {
 });
 
 // ======================
-// DATABASE + SERVER
+// DB + SERVER
 // ======================
-
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Atlas connected"))
-  .catch(err => console.log(err));
+  .catch(err => console.error(err));
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
