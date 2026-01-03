@@ -34,21 +34,17 @@ app.use(
   })
 );
 
-// 🔥 CORS FIX (NETLIFY + LOCAL)
+// ✅ CORS (Render + Netlify SAFE)
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
       "https://jobportal9587.netlify.app"
     ],
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
-
-// 🔥 PRE-FLIGHT FIX
-app.options("*", cors());
 
 app.use(express.json());
 
