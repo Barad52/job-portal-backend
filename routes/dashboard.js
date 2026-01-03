@@ -13,14 +13,15 @@ router.get("/stats", auth, roleCheck("admin"), async (req, res) => {
   try {
     // Admin na jobs
     const jobs = await Job.find({ createdBy: req.user.id }).select("_id");
-
     const jobIds = jobs.map(j => j._id);
 
     const totalJobs = jobs.length;
+
     const openJobs = await Job.countDocuments({
       createdBy: req.user.id,
       status: "open"
     });
+
     const closedJobs = await Job.countDocuments({
       createdBy: req.user.id,
       status: "closed"
@@ -56,16 +57,24 @@ router.get("/stats", auth, roleCheck("admin"), async (req, res) => {
 
 /* ===========================
    DASHBOARD APPLICATIONS LIST
+   ?status=applied | shortlisted | rejected
 =========================== */
 router.get("/applications", auth, roleCheck("admin"), async (req, res) => {
   try {
+    const { status } = req.query;
+
     const jobs = await Job.find({ createdBy: req.user.id }).select("_id");
     const jobIds = jobs.map(j => j._id);
 
-    const applications = await Application.find({
-      job: { $in: jobIds }
-    })
-      .populate("job", "title location")
+    let query = { job: { $in: jobIds } };
+
+    // 🔥 STATUS FILTER
+    if (status) {
+      query.status = status;
+    }
+
+    const applications = await Application.find(query)
+      .populate("job", "title location status")
       .populate("worker", "name email skills experience");
 
     res.json(applications);
