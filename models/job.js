@@ -21,7 +21,7 @@ const jobSchema = new mongoose.Schema(
     // 🔥 VERY IMPORTANT
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "worker",
       required: true
     }
   },

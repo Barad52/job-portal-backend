@@ -11,7 +11,7 @@ const router = express.Router();
 /* ===========================
    APPLY JOB (USER / WORKER)
 =========================== */
-router.post("/apply", auth, roleCheck("user"), async (req, res) => {
+router.post("/apply", auth, roleCheck("worker"), async (req, res) => {
   try {
     const { jobId } = req.body;
 
@@ -64,9 +64,9 @@ router.post("/apply", auth, roleCheck("user"), async (req, res) => {
 });
 
 /* ===========================
-   USER → MY APPLICATIONS
+   WORKER → MY APPLICATIONS
 =========================== */
-router.get("/my", auth, roleCheck("user"), async (req, res) => {
+router.get("/my", auth, roleCheck("worker"), async (req, res) => {
   try {
     const applications = await Application.find({
       worker: req.user.id
