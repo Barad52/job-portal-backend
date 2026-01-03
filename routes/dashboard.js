@@ -56,8 +56,9 @@ router.get("/stats", auth, roleCheck("admin"), async (req, res) => {
 
 /* ===========================
    DASHBOARD APPLICATIONS LIST
-   ?status=applied|shortlisted|rejected
 =========================== */
+
+
 router.get("/applications", auth, roleCheck("admin"), async (req, res) => {
   try {
     const { status } = req.query;

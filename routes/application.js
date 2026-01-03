@@ -15,18 +15,18 @@ router.post("/apply", auth, roleCheck("worker"), async (req, res) => {
   try {
     const { jobId } = req.body;
 
-    // 🔎 Job check
+
     const job = await Job.findById(jobId);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    // ❌ Closed job
+
     if (job.status === "closed") {
       return res.status(400).json({ message: "Job is closed" });
     }
 
-    // 👤 Worker profile check
+ 
     const worker = await User.findById(req.user.id);
     if (!worker.skills.length || !worker.experience) {
       return res.status(400).json({
@@ -34,7 +34,6 @@ router.post("/apply", auth, roleCheck("worker"), async (req, res) => {
       });
     }
 
-    // ❌ Prevent duplicate apply
     const alreadyApplied = await Application.findOne({
       job: jobId,
       worker: req.user.id
@@ -44,15 +43,15 @@ router.post("/apply", auth, roleCheck("worker"), async (req, res) => {
       return res.status(400).json({ message: "Already applied" });
     }
 
-    // ✅ Create application
+
     const application = await Application.create({
       job: jobId,
       worker: req.user.id,
-      employer: job.createdBy,   // 🔥 REQUIRED FOR DASHBOARD
+      employer: job.createdBy,  
       status: "applied"
     });
 
-    // 📩 Email to worker
+   
     await sendEmail(
       worker.email,
       "Job Application Submitted",
@@ -129,7 +128,7 @@ router.patch("/:id/status", auth, roleCheck("admin"), async (req, res) => {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    // 📩 Email to worker
+
     await sendEmail(
       application.worker.email,
       "Application Status Update",
