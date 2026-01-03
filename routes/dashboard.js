@@ -11,7 +11,6 @@ const router = express.Router();
 =========================== */
 router.get("/stats", auth, roleCheck("admin"), async (req, res) => {
   try {
-    // Admin na jobs
     const jobs = await Job.find({ createdBy: req.user.id }).select("_id");
     const jobIds = jobs.map(j => j._id);
 
@@ -57,7 +56,7 @@ router.get("/stats", auth, roleCheck("admin"), async (req, res) => {
 
 /* ===========================
    DASHBOARD APPLICATIONS LIST
-   ?status=applied | shortlisted | rejected
+   ?status=applied|shortlisted|rejected
 =========================== */
 router.get("/applications", auth, roleCheck("admin"), async (req, res) => {
   try {
@@ -67,11 +66,7 @@ router.get("/applications", auth, roleCheck("admin"), async (req, res) => {
     const jobIds = jobs.map(j => j._id);
 
     let query = { job: { $in: jobIds } };
-
-    // 🔥 STATUS FILTER
-    if (status) {
-      query.status = status;
-    }
+    if (status) query.status = status;
 
     const applications = await Application.find(query)
       .populate("job", "title location status")

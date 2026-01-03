@@ -34,7 +34,7 @@ router.post("/apply", auth, roleCheck("worker"), async (req, res) => {
       });
     }
 
-    // ❌ Duplicate apply
+    // ❌ Prevent duplicate apply
     const alreadyApplied = await Application.findOne({
       job: jobId,
       worker: req.user.id
@@ -48,7 +48,7 @@ router.post("/apply", auth, roleCheck("worker"), async (req, res) => {
     const application = await Application.create({
       job: jobId,
       worker: req.user.id,
-      employer: job.createdBy, // 🔥 VERY IMPORTANT
+      employer: job.createdBy,   // 🔥 REQUIRED FOR DASHBOARD
       status: "applied"
     });
 
