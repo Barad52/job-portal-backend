@@ -1,7 +1,6 @@
 require("dotenv").config();
 
 const express = require("express");
-const cors = require("cors");
 const mongoose = require("mongoose");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
@@ -34,17 +33,38 @@ app.use(
   })
 );
 
-// ✅ CORS (Render + Netlify SAFE)
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://jobportal9587.netlify.app"
-    ],
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  })
-);
+// ======================
+// 🔥 CORS FINAL FIX (VERY IMPORTANT)
+// ======================
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://jobportal9587.netlify.app"
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  // 🔥 PRE-FLIGHT REQUEST HANDLE
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
 
 app.use(express.json());
 
@@ -59,8 +79,6 @@ app.use("/dashboard", dashboardRoutes);
 // ======================
 // JOB ROUTES
 // ======================
-
-// GET JOBS (PUBLIC + FILTER + PAGINATION)
 app.get("/jobs", async (req, res) => {
   try {
     const { location, skill, page = 1 } = req.query;
@@ -96,7 +114,7 @@ app.get("/jobs", async (req, res) => {
   }
 });
 
-// ADD JOB (ADMIN)
+// ADD JOB
 app.post("/jobs", auth, roleCheck("admin"), async (req, res) => {
   try {
     const job = await Job.create({
@@ -113,18 +131,16 @@ app.post("/jobs", auth, roleCheck("admin"), async (req, res) => {
 // UPDATE JOB
 app.put("/jobs/:id", auth, roleCheck("admin"), async (req, res) => {
   try {
-    const job = await Job.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const job = await Job.findByIdAndUpdate(req.params.id, req.body, {
+      new: true
+    });
     res.json(job);
   } catch (err) {
     res.status(400).json({ message: "Error updating job" });
   }
 });
 
-// UPDATE JOB STATUS
+// UPDATE STATUS
 app.patch("/jobs/:id/status", auth, roleCheck("admin"), async (req, res) => {
   try {
     const job = await Job.findByIdAndUpdate(
@@ -132,7 +148,6 @@ app.patch("/jobs/:id/status", auth, roleCheck("admin"), async (req, res) => {
       { status: req.body.status },
       { new: true }
     );
-
     res.json(job);
   } catch (err) {
     res.status(400).json({ message: "Status update failed" });
@@ -158,5 +173,5 @@ mongoose
   .catch(err => console.error(err));
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
