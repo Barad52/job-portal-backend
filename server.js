@@ -21,21 +21,9 @@ const roleCheck = require("./middleware/role");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ======================
-// SECURITY
-// ======================
-app.use(helmet());
-
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100
-  })
-);
-
-// ======================
-// 🔥 CORS FINAL FIX (VERY IMPORTANT)
-// ======================
+/* =================================================
+   🔥 CORS (FINAL FIX — NETLIFY + LOCAL + PREFLIGHT)
+================================================= */
 const allowedOrigins = [
   "http://localhost:5173",
   "https://jobportal9587.netlify.app"
@@ -58,7 +46,7 @@ app.use((req, res, next) => {
   );
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
-  // 🔥 PRE-FLIGHT REQUEST HANDLE
+  // 🔥 Preflight request
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
@@ -66,19 +54,33 @@ app.use((req, res, next) => {
   next();
 });
 
+/* =================================================
+   SECURITY
+================================================= */
+app.use(helmet());
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100
+  })
+);
+
 app.use(express.json());
 
-// ======================
-// ROUTES
-// ======================
+/* =================================================
+   ROUTES
+================================================= */
 app.use("/auth", authRoutes);
 app.use("/applications", applicationRoutes);
 app.use("/users", userRoutes);
 app.use("/dashboard", dashboardRoutes);
 
-// ======================
-// JOB ROUTES
-// ======================
+/* =================================================
+   JOB ROUTES
+================================================= */
+
+// GET JOBS (PUBLIC + FILTER + PAGINATION)
 app.get("/jobs", async (req, res) => {
   try {
     const { location, skill, page = 1 } = req.query;
@@ -114,7 +116,7 @@ app.get("/jobs", async (req, res) => {
   }
 });
 
-// ADD JOB
+// ADD JOB (ADMIN)
 app.post("/jobs", auth, roleCheck("admin"), async (req, res) => {
   try {
     const job = await Job.create({
@@ -124,6 +126,7 @@ app.post("/jobs", auth, roleCheck("admin"), async (req, res) => {
 
     res.json(job);
   } catch (err) {
+    console.error(err);
     res.status(400).json({ message: "Error adding job" });
   }
 });
@@ -131,16 +134,19 @@ app.post("/jobs", auth, roleCheck("admin"), async (req, res) => {
 // UPDATE JOB
 app.put("/jobs/:id", auth, roleCheck("admin"), async (req, res) => {
   try {
-    const job = await Job.findByIdAndUpdate(req.params.id, req.body, {
-      new: true
-    });
+    const job = await Job.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
     res.json(job);
   } catch (err) {
+    console.error(err);
     res.status(400).json({ message: "Error updating job" });
   }
 });
 
-// UPDATE STATUS
+// UPDATE JOB STATUS
 app.patch("/jobs/:id/status", auth, roleCheck("admin"), async (req, res) => {
   try {
     const job = await Job.findByIdAndUpdate(
@@ -148,8 +154,10 @@ app.patch("/jobs/:id/status", auth, roleCheck("admin"), async (req, res) => {
       { status: req.body.status },
       { new: true }
     );
+
     res.json(job);
   } catch (err) {
+    console.error(err);
     res.status(400).json({ message: "Status update failed" });
   }
 });
@@ -160,18 +168,19 @@ app.delete("/jobs/:id", auth, roleCheck("admin"), async (req, res) => {
     await Job.findByIdAndDelete(req.params.id);
     res.json({ message: "Job deleted" });
   } catch (err) {
+    console.error(err);
     res.status(400).json({ message: "Error deleting job" });
   }
 });
 
-// ======================
-// DB + SERVER
-// ======================
+/* =================================================
+   DATABASE + SERVER
+================================================= */
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Atlas connected"))
-  .catch(err => console.error(err));
+  .catch(err => console.error("MongoDB error:", err));
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
