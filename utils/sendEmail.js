@@ -1,31 +1,11 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // MUST be false for port 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
-
-// 🔍 VERIFY TRANSPORTER
-transporter.verify((err, success) => {
-  if (err) {
-    console.error("❌ Email config error:", err);
-  } else {
-    console.log("✅ Email server ready");
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (to, subject, text) => {
   try {
-    await transporter.sendMail({
-      from: `"Job Portal" <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: "Job Portal <onboarding@resend.dev>",
       to,
       subject,
       text
@@ -33,7 +13,7 @@ const sendEmail = async (to, subject, text) => {
 
     console.log("📧 Email sent to:", to);
   } catch (err) {
-    console.error("❌ Email send failed:", err);
+    console.error("❌ Email error:", err);
   }
 };
 
