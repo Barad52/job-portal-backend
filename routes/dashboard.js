@@ -6,6 +6,9 @@ const Application = require("../models/Application");
 
 const router = express.Router();
 
+/* ===========================
+   DASHBOARD STATS (ADMIN)
+=========================== */
 router.get("/stats", auth, roleCheck("admin"), async (req, res) => {
   try {
     const jobs = await Job.find({ createdBy: req.user.id }).select("_id");
@@ -51,7 +54,9 @@ router.get("/stats", auth, roleCheck("admin"), async (req, res) => {
   }
 });
 
-
+/* ===========================
+   DASHBOARD APPLICATIONS
+=========================== */
 router.get("/applications", auth, roleCheck("admin"), async (req, res) => {
   try {
     const { status } = req.query;
@@ -63,7 +68,7 @@ router.get("/applications", auth, roleCheck("admin"), async (req, res) => {
     if (status) query.status = status;
 
     const applications = await Application.find(query)
-      .populate("job", "title location status")
+      .populate("job", "title company location status") // 🔥 FIX HERE
       .populate("worker", "name email skills experience");
 
     res.json(applications);
