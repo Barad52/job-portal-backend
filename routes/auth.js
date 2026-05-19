@@ -40,7 +40,7 @@ router.post(
         name,
         email,
         password: hashedPassword,
-        role: "admin"   // 🔥 IMPORTANT FIX
+        role: "worker"   // 🔥 IMPORTANT FIX
       });
 
       res.json({ message: "User registered successfully" });
